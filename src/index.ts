@@ -11,11 +11,14 @@ import { install, type InstallChoice } from "./installer.ts"
 
 const cliSelection = process.argv.find((arg) => arg.startsWith("--apply="))
 if (cliSelection) {
+  const homeArgument = process.argv.find((arg) => arg.startsWith("--home="))
   const choices = cliSelection.slice("--apply=".length).split(",") as InstallChoice[]
   await install({
     choices,
     dryRun: process.argv.includes("--dry-run"),
+    openApps: homeArgument === undefined,
     onLog: console.log,
+    ...(homeArgument ? { home: homeArgument.slice("--home=".length) } : {}),
   })
   process.exit(0)
 }

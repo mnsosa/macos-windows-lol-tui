@@ -16,6 +16,7 @@ export interface InstallOptions {
   dryRun?: boolean
   home?: string
   onLog?: (message: string) => void
+  openApps?: boolean
 }
 
 type JsonObject = Record<string, unknown>
@@ -143,6 +144,7 @@ async function installMouse(
   backupRoot: string,
   dryRun: boolean,
   log: (message: string) => void,
+  openApps: boolean,
 ) {
   log("Installing Windows-like mouse behavior")
   await ensureApp(appPaths.mouse, "linearmouse", dryRun, log)
@@ -155,8 +157,10 @@ async function installMouse(
     await writeFile(configPath, `${JSON.stringify(linearMousePreset, null, 2)}\n`)
   }
 
-  await run("pkill", ["-x", "LinearMouse"], log, dryRun).catch(() => undefined)
-  await run("open", ["-a", "LinearMouse"], log, dryRun)
+  if (openApps) {
+    await run("pkill", ["-x", "LinearMouse"], log, dryRun).catch(() => undefined)
+    await run("open", ["-a", "LinearMouse"], log, dryRun)
+  }
 }
 
 async function installKeyboard(
@@ -165,6 +169,7 @@ async function installKeyboard(
   backupRoot: string,
   dryRun: boolean,
   log: (message: string) => void,
+  openApps: boolean,
 ) {
   log("Installing Karabiner keyboard profiles")
   await ensureApp(appPaths.karabiner, "karabiner-elements", dryRun, log)
@@ -183,8 +188,10 @@ async function installKeyboard(
     await writeFile(configPath, `${JSON.stringify(merged, null, 2)}\n`)
   }
 
-  await run("open", ["-a", "Karabiner-Elements"], log, dryRun)
-  log("Authorize every item shown in Karabiner > Setup")
+  if (openApps) {
+    await run("open", ["-a", "Karabiner-Elements"], log, dryRun)
+    log("Authorize every item shown in Karabiner > Setup")
+  }
 }
 
 export async function install(options: InstallOptions): Promise<void> {
@@ -197,13 +204,14 @@ export async function install(options: InstallOptions): Promise<void> {
   const home = options.home ?? homedir()
   const dryRun = options.dryRun ?? false
   const log = options.onLog ?? (() => undefined)
+  const openApps = options.openApps ?? true
   const backupRoot = join(home, ".config/macos-windows-lol-tui/backups", timestamp())
 
   if (options.choices.includes("mouse")) {
-    await installMouse(home, backupRoot, dryRun, log)
+    await installMouse(home, backupRoot, dryRun, log, openApps)
   }
   if (options.choices.includes("lol") || options.choices.includes("global")) {
-    await installKeyboard(options.choices, home, backupRoot, dryRun, log)
+    await installKeyboard(options.choices, home, backupRoot, dryRun, log, openApps)
   }
 
   log(dryRun ? "Dry run complete; no changes were made" : "Installation complete")

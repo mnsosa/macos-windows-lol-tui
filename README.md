@@ -99,6 +99,16 @@ Preview every action without changing the machine:
 bun run src/index.ts --apply=mouse,lol,global --dry-run
 ```
 
+An administrator can target another user's home without launching applications
+in the wrong graphical session:
+
+```bash
+sudo -u USER env HOME=/Users/USER bun run src/index.ts \
+  --apply=mouse,lol,global --home=/Users/USER
+```
+
+The target user must approve Karabiner permissions from their own macOS session.
+
 ## Permissions
 
 Karabiner requires explicit macOS approval. After installation, open
