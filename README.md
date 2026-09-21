@@ -34,6 +34,37 @@ With the default mapping, use the keys in their normal Windows positions:
 - Physical `Alt` sends Option/Alt, so `Alt+Q/W/E/R` self-casts.
 - The Windows/Command key remains Command and is not a League modifier.
 
+## Game-only Command to Alt mapping
+
+On compact Mac-layout keyboards, the key immediately left of the space bar is
+labeled Command but occupies the position commonly used by Alt on a Windows
+keyboard. The included Karabiner rule turns the left and right Command keys
+into Option/Alt only while the League game client is frontmost.
+
+The rule matches only this bundle identifier:
+
+```text
+com.riotgames.LeagueofLegends.GameClient
+```
+
+Install `karabiner/league-windows-modifiers.json` as a Karabiner complex
+modification. With macOS modifier keys left at their defaults, the result is:
+
+Karabiner must also show all checks as enabled under **Setup**. On current
+macOS versions, enable both **Karabiner-Elements Non-Privileged Agents v2** and
+**Karabiner-Elements Privileged Daemons v2** under **System Settings > General
+> Login Items & Extensions > App Background Activity**. The rule cannot run
+while either required background service is disabled.
+
+| Physical key | Outside League | During a match |
+| --- | --- | --- |
+| Control | Control | Control |
+| Command | Command | Option/Alt |
+| Option/Alt | Option/Alt | Option/Alt |
+
+This prevents physical `Ctrl+Q` from becoming the macOS Quit shortcut and lets
+the Command-position key trigger League's `Alt+Q/W/E/R` self-cast bindings.
+
 ## Command-line helper
 
 `scripts/modifier-keys.sh` shows per-device modifier mappings and can reset a
