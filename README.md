@@ -1,130 +1,120 @@
-# League of Legends keyboard setup for macOS
+# macos-windows-lol-tui
 
-Use the physical `Ctrl` and `Alt` keys in League of Legends on macOS as you
-would on Windows, without turning `Ctrl+Q` into the macOS **Quit** shortcut.
+An animated [OpenTUI](https://opentui.com) installer that makes mouse and
+keyboard behavior on macOS feel closer to Windows, with a dedicated League of
+Legends mode.
 
-## Why this happens
+## Modules
 
-League already supports the familiar Windows bindings on macOS:
+The TUI lets you combine three independent modules:
 
-| Action | Binding |
+| Module | What it changes |
 | --- | --- |
-| Level an ability | `Ctrl+Q/W/E/R` |
-| Self-cast an ability | `Alt+Q/W/E/R` |
-| Quick cast with indicator | `Shift+Q/W/E/R` |
+| Mouse / LinearMouse | Installs LinearMouse and disables pointer acceleration for mouse devices. |
+| Rift / Karabiner | Maps Command-position keys to Option/Alt only while the LoL game client is frontmost. |
+| Desktop / Windows mode | Recreates Windows-style modifier behavior outside LoL. |
 
-The problem appears when macOS System Settings swaps `Control` and `Command`
-for an external keyboard. The physical `Ctrl+Q` then produces `Command+Q`,
-which macOS handles as **Quit League of Legends** before the game can use it.
-
-## Recommended fix
-
-Restore the keyboard's modifier keys to their defaults:
-
-1. Open **System Settings > Keyboard > Keyboard Shortcuts > Modifier Keys**.
-2. Select the external keyboard, not the Mac's built-in keyboard.
-3. Click **Restore Defaults**.
-4. Repeat for each connection mode if the keyboard can use Bluetooth and a USB
-   receiver. macOS stores a separate mapping for each mode.
-5. Reconnect the keyboard or log out and back in if the change is not immediate.
-
-With the default mapping, use the keys in their normal Windows positions:
-
-- Physical `Ctrl` sends Control, so `Ctrl+Q/W/E/R` levels abilities.
-- Physical `Alt` sends Option/Alt, so `Alt+Q/W/E/R` self-casts.
-- The Windows/Command key remains Command and is not a League modifier.
-
-## Game-only Command to Alt mapping
-
-On compact Mac-layout keyboards, the key immediately left of the space bar is
-labeled Command but occupies the position commonly used by Alt on a Windows
-keyboard. The included Karabiner rule turns the left and right Command keys
-into Option/Alt only while the League game client is frontmost.
-
-The rule matches only this bundle identifier:
+The League rule matches only:
 
 ```text
 com.riotgames.LeagueofLegends.GameClient
 ```
 
-Install `karabiner/league-windows-modifiers.json` as a Karabiner complex
-modification. With macOS modifier keys left at their defaults, the result is:
+The Desktop rule explicitly excludes that bundle, so it does not conflict with
+the in-game layout. League keeps its normal bindings: `Ctrl+Q/W/E/R` levels an
+ability and `Alt+Q/W/E/R` self-casts.
 
-Karabiner must also show all checks as enabled under **Setup**. On current
-macOS versions, enable both **Karabiner-Elements Non-Privileged Agents v2** and
-**Karabiner-Elements Privileged Daemons v2** under **System Settings > General
-> Login Items & Extensions > App Background Activity**. The rule cannot run
-while either required background service is disabled.
+Desktop mode uses the original Windows-like desktop mapping:
 
-| Physical key | Outside League | During a match |
+| Physical key | Output outside LoL | Output inside LoL |
 | --- | --- | --- |
-| Control | Control | Control |
-| Command | Command | Option/Alt |
-| Option/Alt | Option/Alt | Option/Alt |
+| Left Control | Command | Control |
+| Left Command | Control | Option/Alt |
+| Right Command | Option/Alt | Option/Alt |
 
-This prevents physical `Ctrl+Q` from becoming the macOS Quit shortcut and lets
-the Command-position key trigger League's `Alt+Q/W/E/R` self-cast bindings.
+## Run
 
-## Command-line helper
-
-`scripts/modifier-keys.sh` shows per-device modifier mappings and can reset a
-selected mapping. It only uses tools included with macOS.
+Requirements: macOS, Homebrew, and Bun 1.3 or newer.
 
 ```bash
-./scripts/modifier-keys.sh list
-./scripts/modifier-keys.sh reset com.apple.keyboard.modifiermapping.VENDOR-PRODUCT-LOCATION
+brew install bun
+git clone https://github.com/mnsosa/macos-windows-lol-tui.git
+cd macos-windows-lol-tui
+bun install --frozen-lockfile
+bun start
 ```
 
-The reset command asks for confirmation, closes System Settings to prevent a
-stale panel from restoring the old values, saves explicit identity mappings,
-and updates the connected keyboard immediately. Run `list` first and use the
-identifier shown for your keyboard. You can undo the reset by configuring that
-keyboard again in System Settings.
-
-## Other remapping tools
-
-Karabiner-Elements, keyboard vendor software, and similar tools can apply a
-second remapping after macOS processes the key. If the System Settings values
-look correct but the keys still behave incorrectly, check Karabiner-Elements
-under **Simple Modifications** and remove mappings such as:
+Controls:
 
 ```text
-left_command -> left_control
-left_control -> left_command
+Up/Down or j/k   navigate
+Space            toggle a module
+Enter            install selected modules
+q or Escape      quit
 ```
 
-The helper warns when it finds Command, Control, or Option key codes in the
-active user's Karabiner configuration. It does not remove those rules because
-they may be intentional and unrelated to League.
+The interface includes a sliding entrance, a continuous accent animation, and
+an animated deployment indicator.
 
-## Verify League's bindings
+## Safety
 
-Open **League of Legends > Settings > Hotkeys** and confirm:
+- Existing LinearMouse and Karabiner files are backed up under
+  `~/.config/macos-windows-lol-tui/backups/<timestamp>/`.
+- Karabiner rules are merged into the selected profile; unrelated rules and
+  device settings are preserved.
+- The three legacy global modifier pairs from the previous repository are
+  migrated to scoped rules; other simple modifications remain untouched.
+- Running the same selection repeatedly is idempotent and does not duplicate
+  managed rules.
+- Applications are installed through Homebrew only when absent.
+- The installer never edits League's `input.ini`.
 
-- **Abilities and Summoner Spells > Level Up Spell** uses `Ctrl`.
-- **Abilities and Summoner Spells > Self Cast** uses `Alt`.
+Preview every action without changing the machine:
 
-League may store these values in `Config/input.ini`. Typical entries are:
-
-```ini
-evtSelfCastSpell1=[Alt][q]
-evtLevelSpell1=[Ctrl][q]
+```bash
+bun run src/index.ts --apply=mouse,lol,global --dry-run
 ```
 
-Prefer changing hotkeys through the game. Riot can synchronize or regenerate
-`input.ini`, so this project deliberately does not overwrite it.
+## Permissions
 
-## Espanol
+Karabiner requires explicit macOS approval. After installation, open
+**Karabiner-Elements > Setup** and enable every required item. Current macOS
+versions require both background services under **System Settings > General >
+Login Items & Extensions > App Background Activity**:
 
-El arreglo recomendado es volver a los modificadores predeterminados del
-teclado externo. En **Ajustes del Sistema > Teclado > Funciones rapidas de
-teclado > Teclas modificadoras**, selecciona el teclado y pulsa **Restaurar
-valores por omision**. Repite el cambio para Bluetooth y el receptor USB si
-aparecen como dispositivos distintos.
+```text
+Karabiner-Elements Non-Privileged Agents v2
+Karabiner-Elements Privileged Daemons v2
+```
 
-Luego `Ctrl+Q/W/E/R` sube habilidades y `Alt+Q/W/E/R` autocastea, igual que en
-Windows. No intercambies `Control` y `Command` globalmente: eso convierte el
-`Ctrl+Q` fisico en el atajo `Command+Q` de macOS para cerrar la aplicacion.
+The TUI opens Karabiner after writing the rules, but macOS requires the user to
+approve security permissions.
+
+## Presets
+
+Human-readable copies of the managed settings are included in:
+
+- `presets/linearmouse-windows.json`
+- `karabiner/league-windows-modifiers.json`
+- `karabiner/global-windows-modifiers.json`
+
+The LinearMouse preset applies `disableAcceleration: true` to mouse devices.
+The original Ultra-Link 8K configuration used the same setting but was tied to
+vendor `0x362d` and product `0xd028`; this preset uses the mouse category so it
+also benefits other devices.
+
+## Build
+
+Create a standalone macOS executable containing Bun and OpenTUI:
+
+```bash
+bun run typecheck
+bun test
+bun run build
+./dist/macos-windows-lol-tui
+```
+
+Dependencies are pinned in `package.json` and `bun.lock`.
 
 ## License
 

@@ -2,7 +2,7 @@
   "title": "League of Legends Windows-like modifiers",
   "rules": [
     {
-      "description": "League of Legends: use Command-position keys as Alt",
+      "description": "League of Legends: Command-position keys act as Alt",
       "manipulators": [
         {
           "type": "basic",
