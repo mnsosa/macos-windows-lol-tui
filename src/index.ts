@@ -121,7 +121,13 @@ function updateGauge(animate: boolean) {
     "  0% STOCK MACOS  //  NORMAL MODE UNLOCKED",
   ]
   const targetWidth = [4, 21, 39, 58][selectedCount] ?? 4
+  const meterColor = stockRemaining === 100
+    ? "#2684ff"
+    : stockRemaining > 50
+      ? "#9457eb"
+      : "#ff4fa3"
   gaugeLabel.content = labels[selectedCount] ?? labels[0]!
+  meter.backgroundColor = meterColor
 
   if (!animate) {
     meter.width = targetWidth
