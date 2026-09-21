@@ -1,8 +1,18 @@
 # macos-windows-lol-tui
 
+<p align="center">
+  <img src="./assets/banner.png" alt="macOS Windows LoL TUI banner" width="720">
+</p>
+
 An animated monochrome [OpenTUI](https://opentui.com) installer that makes mouse and
 keyboard behavior on macOS feel closer to Windows, with a dedicated League of
 Legends mode.
+
+## Preview
+
+<p align="center">
+  <img src="./assets/tui-screenshot.png" alt="macos-windows-lol-tui program screenshot" width="900">
+</p>
 
 ## Modules
 
