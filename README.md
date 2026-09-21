@@ -50,6 +50,22 @@ and updates the connected keyboard immediately. Run `list` first and use the
 identifier shown for your keyboard. You can undo the reset by configuring that
 keyboard again in System Settings.
 
+## Other remapping tools
+
+Karabiner-Elements, keyboard vendor software, and similar tools can apply a
+second remapping after macOS processes the key. If the System Settings values
+look correct but the keys still behave incorrectly, check Karabiner-Elements
+under **Simple Modifications** and remove mappings such as:
+
+```text
+left_command -> left_control
+left_control -> left_command
+```
+
+The helper warns when it finds Command, Control, or Option key codes in the
+active user's Karabiner configuration. It does not remove those rules because
+they may be intentional and unrelated to League.
+
 ## Verify League's bindings
 
 Open **League of Legends > Settings > Hotkeys** and confirm:

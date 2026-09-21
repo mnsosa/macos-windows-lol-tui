@@ -10,6 +10,15 @@ usage() {
   printf '  %s reset %sVENDOR-PRODUCT-LOCATION\n' "$0" "$key_prefix"
 }
 
+warn_karabiner() {
+  local config="$HOME/.config/karabiner/karabiner.json"
+
+  if [[ -f "$config" ]] && grep -Eq '"key_code": "(left|right)_(command|control|option)"' "$config"; then
+    printf '\nWarning: Karabiner also remaps modifier keys in:\n  %s\n' "$config" >&2
+    printf 'Review its Simple Modifications; they can override this macOS mapping.\n' >&2
+  fi
+}
+
 list_mappings() {
   local preferences
   local keys
@@ -27,6 +36,8 @@ list_mappings() {
     printf '\n%s\n' "$key"
     defaults -currentHost read NSGlobalDomain "$key"
   done <<< "$keys"
+
+  warn_karabiner
 }
 
 reset_mapping() {
@@ -68,6 +79,7 @@ reset_mapping() {
     --set '{"HIDKeyboardModifierMappingPairs":[]}' >/dev/null
 
   printf 'Default modifier keys saved and applied to the connected keyboard.\n'
+  warn_karabiner
 }
 
 case "${1:-}" in
