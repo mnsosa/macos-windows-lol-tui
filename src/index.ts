@@ -71,11 +71,11 @@ const shell = new BoxRenderable(renderer, {
 })
 
 const title = new TextRenderable(renderer, {
-  content: "ARE YOU NORMAL OR A STOCK MACOS USER?",
+  content: "ARE YOU NORMAL OR A GAY MACOS USER?",
   fg: "#ffffff",
 })
 const subtitle = new TextRenderable(renderer, {
-  content: "SELECT MORE. LEAVE STOCK MACOS BEHIND.",
+  content: "SELECT MORE. LEAVE GAY MACOS BEHIND.",
   fg: "#8c8c8c",
 })
 const gauge = new BoxRenderable(renderer, {
@@ -115,10 +115,10 @@ function updateGauge(animate: boolean) {
   const selectedCount = choices.filter((item) => item.selected).length
   const stockRemaining = Math.round(100 - (selectedCount / choices.length) * 100)
   const labels = [
-    "100% STOCK MACOS  //  FACTORY CONDITION",
-    " 67% STOCK MACOS  //  FIRST SIGNS OF RECOVERY",
-    " 33% STOCK MACOS  //  ALMOST NORMAL",
-    "  0% STOCK MACOS  //  NORMAL MODE UNLOCKED",
+    "100% GAY MACOS  //  FACTORY CONDITION",
+    " 67% GAY MACOS  //  FIRST SIGNS OF RECOVERY",
+    " 33% GAY MACOS  //  ALMOST NORMAL",
+    "  0% GAY MACOS  //  NORMAL MODE UNLOCKED",
   ]
   const targetWidth = [4, 21, 39, 58][selectedCount] ?? 4
   const meterColor = stockRemaining === 100
@@ -145,7 +145,7 @@ function updateGauge(animate: boolean) {
     ease: "outBack",
   })
   selectionTimeline.play()
-  status.content = `${stockRemaining}% STOCK MACOS REMAINING`
+  status.content = `${stockRemaining}% GAY MACOS REMAINING`
   status.fg = "#d8d8d8"
 }
 

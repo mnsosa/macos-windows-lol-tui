@@ -53,11 +53,11 @@ Enter            install selected modules
 q or Escape      quit
 ```
 
-The interface opens with `ARE YOU NORMAL OR A STOCK MACOS USER?` and includes
-a sliding entrance, an animated stock-macOS meter driven by the number of
+The interface opens with `ARE YOU NORMAL OR A GAY MACOS USER?` and includes
+a sliding entrance, an animated gay-macOS meter driven by the number of
 selected modules, and an animated deployment indicator. The interface remains
 monochrome except for the meter: pink below 50%, violet above 50% but below
-100%, and blue at 100% stock macOS.
+100%, and blue at 100% gay macOS.
 
 ## Safety
 
