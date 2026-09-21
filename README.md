@@ -36,7 +36,7 @@ With the default mapping, use the keys in their normal Windows positions:
 
 ## Command-line helper
 
-`scripts/modifier-keys.sh` shows per-device modifier mappings and can delete a
+`scripts/modifier-keys.sh` shows per-device modifier mappings and can reset a
 selected mapping. It only uses tools included with macOS.
 
 ```bash
@@ -44,9 +44,11 @@ selected mapping. It only uses tools included with macOS.
 ./scripts/modifier-keys.sh reset com.apple.keyboard.modifiermapping.VENDOR-PRODUCT-LOCATION
 ```
 
-The reset command asks for confirmation and only removes the key named on the
-command line. Run `list` first and use the identifier shown for your keyboard.
-You can undo the reset by configuring that keyboard again in System Settings.
+The reset command asks for confirmation, closes System Settings to prevent a
+stale panel from restoring the old values, saves explicit identity mappings,
+and updates the connected keyboard immediately. Run `list` first and use the
+identifier shown for your keyboard. You can undo the reset by configuring that
+keyboard again in System Settings.
 
 ## Verify League's bindings
 

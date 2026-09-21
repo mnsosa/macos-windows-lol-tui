@@ -32,12 +32,18 @@ list_mappings() {
 reset_mapping() {
   local key="${1:-}"
   local answer
+  local vendor_id
+  local product_id
+  local identity_mapping
 
-  if [[ ! "$key" =~ ^com\.apple\.keyboard\.modifiermapping\.[0-9]+-[0-9]+-[0-9]+$ ]]; then
+  if [[ ! "$key" =~ ^com\.apple\.keyboard\.modifiermapping\.([0-9]+)-([0-9]+)-[0-9]+$ ]]; then
     printf 'Invalid mapping key: %s\n' "$key" >&2
     usage >&2
     exit 2
   fi
+
+  vendor_id="${BASH_REMATCH[1]}"
+  product_id="${BASH_REMATCH[2]}"
 
   if ! defaults -currentHost read NSGlobalDomain "$key" >/dev/null 2>&1; then
     printf 'Mapping not found: %s\n' "$key" >&2
@@ -52,8 +58,16 @@ reset_mapping() {
     return
   fi
 
-  defaults -currentHost delete NSGlobalDomain "$key"
-  printf 'Mapping removed. Reconnect the keyboard if the change is not immediate.\n'
+  osascript -e 'tell application "System Settings" to quit' 2>/dev/null || true
+
+  identity_mapping='({HIDKeyboardModifierMappingSrc=30064771296;HIDKeyboardModifierMappingDst=30064771296;},{HIDKeyboardModifierMappingSrc=30064771299;HIDKeyboardModifierMappingDst=30064771299;},{HIDKeyboardModifierMappingSrc=30064771300;HIDKeyboardModifierMappingDst=30064771300;},{HIDKeyboardModifierMappingSrc=30064771303;HIDKeyboardModifierMappingDst=30064771303;})'
+  defaults -currentHost write NSGlobalDomain "$key" "$identity_mapping"
+
+  hidutil property \
+    --matching "{\"VendorID\":$vendor_id,\"ProductID\":$product_id,\"PrimaryUsagePage\":1,\"PrimaryUsage\":6}" \
+    --set '{"HIDKeyboardModifierMappingPairs":[]}' >/dev/null
+
+  printf 'Default modifier keys saved and applied to the connected keyboard.\n'
 }
 
 case "${1:-}" in
