@@ -65,6 +65,17 @@ describe("mergeKarabinerRules", () => {
     )).toBe(true)
   })
 
+  test("League profile maps Alt-Tab to the macOS application switcher", () => {
+    const result = mergeKarabinerRules({}, ["lol"])
+    const profiles = result.profiles as Array<Record<string, any>>
+    const altTab = profiles[0]!.complex_modifications.rules[0].manipulators[0]
+    expect(altTab.from).toEqual({
+      key_code: "tab",
+      modifiers: { mandatory: ["option"], optional: ["any"] },
+    })
+    expect(altTab.to).toEqual([{ key_code: "tab", modifiers: ["command"] }])
+  })
+
   test("migrates only the legacy conflicting simple modifiers", () => {
     const source = {
       profiles: [{
@@ -81,6 +92,25 @@ describe("mergeKarabinerRules", () => {
     expect(profiles[0]!.simple_modifications).toEqual([
       { from: { key_code: "caps_lock" }, to: [{ key_code: "escape" }] },
     ])
+  })
+
+  test("removes the legacy unscoped League rule", () => {
+    const source = {
+      profiles: [{
+        name: "Default",
+        selected: true,
+        complex_modifications: {
+          rules: [{
+            description: "League of Legends: use Command-position keys as Alt",
+            manipulators: [],
+          }],
+        },
+      }],
+    }
+    const result = mergeKarabinerRules(source, ["lol"])
+    const profiles = result.profiles as Array<Record<string, any>>
+    expect(profiles[0]!.complex_modifications.rules).toHaveLength(1)
+    expect(profiles[0]!.complex_modifications.rules[0].description).toBe(LOL_RULE_DESCRIPTION)
   })
 })
 

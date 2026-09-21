@@ -25,6 +25,9 @@ const legacySimpleModifiers = new Set([
   "left_control:left_command",
   "right_command:left_option",
 ])
+const legacyRuleDescriptions = new Set([
+  "League of Legends: use Command-position keys as Alt",
+])
 
 const appPaths = {
   mouse: "/Applications/LinearMouse.app",
@@ -121,7 +124,9 @@ export function mergeKarabinerRules(
   if (choices.includes("lol")) managed.add(LOL_RULE_DESCRIPTION)
   if (choices.includes("global")) managed.add(GLOBAL_RULE_DESCRIPTION)
   const nextRules = rules.filter(
-    (rule) => !isObject(rule) || !managed.has(String(rule.description ?? "")),
+    (rule) => !isObject(rule)
+      || (!managed.has(String(rule.description ?? ""))
+        && !legacyRuleDescriptions.has(String(rule.description ?? ""))),
   )
 
   if (choices.includes("global")) nextRules.unshift(globalWindowsRule)

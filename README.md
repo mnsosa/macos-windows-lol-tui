@@ -32,7 +32,9 @@ com.riotgames.LeagueofLegends.GameClient
 
 The Desktop rule explicitly excludes that bundle, so it does not conflict with
 the in-game layout. League keeps its normal bindings: `Ctrl+Q/W/E/R` levels an
-ability and `Alt+Q/W/E/R` self-casts.
+ability and `Alt+Q/W/E/R` self-casts. Inside the game, `Alt+Tab` is translated
+to macOS `Command+Tab`, so the physical Windows-style chord still switches
+applications.
 
 Desktop mode uses the original Windows-like desktop mapping:
 

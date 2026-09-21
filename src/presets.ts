@@ -25,6 +25,15 @@ function modifier(from: string, to: string, condition: Record<string, unknown>) 
 export const lolRule = {
   description: LOL_RULE_DESCRIPTION,
   manipulators: [
+    {
+      type: "basic",
+      from: {
+        key_code: "tab",
+        modifiers: { mandatory: ["option"], optional: ["any"] },
+      },
+      to: [{ key_code: "tab", modifiers: ["command"] }],
+      conditions: [leagueCondition],
+    },
     modifier("left_command", "left_option", leagueCondition),
     modifier("right_command", "right_option", leagueCondition),
   ],
