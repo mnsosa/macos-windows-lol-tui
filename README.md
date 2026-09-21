@@ -50,6 +50,7 @@ Controls:
 Up/Down or j/k   navigate
 Space            toggle a module
 Enter            install selected modules
+R                rescan system diagnostics
 q or Escape      quit
 ```
 
@@ -58,6 +59,14 @@ a sliding entrance, an animated gay-macOS meter driven by the number of
 selected modules, and an animated deployment indicator. The interface remains
 monochrome except for the meter: pink below 50%, violet above 50% but below
 100%, and blue at 100% gay macOS.
+
+A right-hand diagnostic sidebar scans the current machine without changing it:
+
+- LinearMouse installation and disabled-acceleration preset.
+- Karabiner installation and virtual keyboard engine readiness.
+- LoL-only and desktop-wide managed rule status.
+
+Diagnostics refresh automatically after installation or manually with `R`.
 
 ## Safety
 

@@ -5,6 +5,11 @@ import {
   linearMousePreset,
 } from "../src/presets.ts"
 import { install, mergeKarabinerRules } from "../src/installer.ts"
+import {
+  hasLinearMousePreset,
+  inspectKarabinerRules,
+  isKarabinerEngineReady,
+} from "../src/diagnostics.ts"
 
 describe("mergeKarabinerRules", () => {
   test("preserves unrelated settings and installs selected rules", () => {
@@ -88,4 +93,28 @@ test("installer rejects unknown components before making changes", async () => {
   await expect(install({ choices: ["invalid" as any], dryRun: true })).rejects.toThrow(
     "Unknown component: invalid",
   )
+})
+
+describe("system diagnostics", () => {
+  test("detects disabled mouse acceleration", () => {
+    expect(hasLinearMousePreset({
+      schemes: [{ pointer: { disableAcceleration: true } }],
+    })).toBe(true)
+    expect(hasLinearMousePreset({ schemes: [] })).toBe(false)
+  })
+
+  test("detects managed rules in the selected Karabiner profile", () => {
+    const config = mergeKarabinerRules({}, ["lol", "global"])
+    expect(inspectKarabinerRules(config)).toEqual({
+      lolRuleInstalled: true,
+      globalRuleInstalled: true,
+    })
+  })
+
+  test("detects virtual keyboard readiness", () => {
+    expect(isKarabinerEngineReady({
+      virtual_hid_devices_state: { virtual_hid_keyboard_ready: true },
+    })).toBe(true)
+    expect(isKarabinerEngineReady(undefined)).toBe(false)
+  })
 })

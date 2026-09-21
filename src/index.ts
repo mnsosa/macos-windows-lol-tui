@@ -6,6 +6,7 @@ import {
   engine,
   type KeyEvent,
 } from "@opentui/core"
+import { diagnoseSystem, type SystemDiagnostics } from "./diagnostics.ts"
 import { install, type InstallChoice } from "./installer.ts"
 
 const cliSelection = process.argv.find((arg) => arg.startsWith("--apply="))
@@ -55,13 +56,22 @@ let cursor = 0
 let installing = false
 let spinnerTimer: ReturnType<typeof setInterval> | undefined
 let selectionTimeline: ReturnType<typeof createTimeline> | undefined
+let diagnosticTimeline: ReturnType<typeof createTimeline> | undefined
+
+const shellWidth = Math.max(72, Math.min(112, renderer.width - 4))
+const shellHeight = Math.max(22, Math.min(26, renderer.height))
+const sidebarWidth = Math.max(24, Math.floor(shellWidth * 0.31))
+const mainWidth = shellWidth - sidebarWidth - 6
+const gaugeWidth = mainWidth - 4
+const settledLeft = Math.max(0, Math.floor((renderer.width - shellWidth) / 2))
 
 const shell = new BoxRenderable(renderer, {
   id: "shell",
   position: "absolute",
   left: -18,
-  width: 76,
-  height: 24,
+  top: Math.max(0, Math.floor((renderer.height - shellHeight) / 2)),
+  width: shellWidth,
+  height: shellHeight,
   borderStyle: "double",
   borderColor: "#ffffff",
   backgroundColor: "#050505",
@@ -78,8 +88,27 @@ const subtitle = new TextRenderable(renderer, {
   content: "SELECT MORE. LEAVE GAY MACOS BEHIND.",
   fg: "#8c8c8c",
 })
+const body = new BoxRenderable(renderer, {
+  width: "100%",
+  flexGrow: 1,
+  flexDirection: "row",
+  gap: 2,
+})
+const mainPanel = new BoxRenderable(renderer, {
+  width: mainWidth,
+  height: "100%",
+  borderStyle: "single",
+  borderColor: "#686868",
+  title: " LOADOUT ",
+  titleColor: "#ffffff",
+  bottomTitle: " SPACE SELECT / ENTER DEPLOY ",
+  bottomTitleAlignment: "right",
+  padding: 1,
+  flexDirection: "column",
+  gap: 1,
+})
 const gauge = new BoxRenderable(renderer, {
-  width: 58,
+  width: gaugeWidth,
   height: 1,
   backgroundColor: "#242424",
 })
@@ -96,20 +125,84 @@ const status = new TextRenderable(renderer, {
   content: "READY  Build your loadout, then deploy.",
   fg: "#d8d8d8",
 })
+const sidebar = new BoxRenderable(renderer, {
+  width: sidebarWidth,
+  height: "100%",
+  borderStyle: "single",
+  borderColor: "#686868",
+  title: " HOST STATE ",
+  titleColor: "#ffffff",
+  bottomTitle: " R RESCAN ",
+  bottomTitleAlignment: "right",
+  padding: 1,
+  flexDirection: "column",
+  gap: 1,
+})
+const diagnosticSweep = new BoxRenderable(renderer, {
+  width: 3,
+  height: 1,
+  backgroundColor: "#ffffff",
+})
+const diagnosticText = new TextRenderable(renderer, {
+  content: "[??] SCANNING HOST...",
+  fg: "#bdbdbd",
+})
 const footer = new TextRenderable(renderer, {
-  content: "UP/DOWN navigate   SPACE toggle   ENTER install   Q quit",
+  content: "UP/DOWN navigate   SPACE toggle   ENTER install   R rescan   Q quit",
   fg: "#666666",
 })
 
+mainPanel.add(gauge)
+mainPanel.add(gaugeLabel)
+mainPanel.add(menuText)
+mainPanel.add(detail)
+mainPanel.add(status)
+sidebar.add(diagnosticSweep)
+sidebar.add(diagnosticText)
+body.add(mainPanel)
+body.add(sidebar)
 shell.add(title)
 shell.add(subtitle)
-shell.add(gauge)
-shell.add(gaugeLabel)
-shell.add(menuText)
-shell.add(detail)
-shell.add(status)
+shell.add(body)
 shell.add(footer)
 renderer.root.add(shell)
+
+function mark(value: boolean): string {
+  return value ? "[OK]" : "[--]"
+}
+
+function renderDiagnostics(result: SystemDiagnostics) {
+  diagnosticText.content = [
+    `${mark(result.linearMouseInstalled)} LINEARMOUSE`,
+    `${mark(result.linearMouseConfigured)} NO ACCEL`,
+    "",
+    `${mark(result.karabinerInstalled)} KARABINER`,
+    `${mark(result.karabinerReady)} ENGINE READY`,
+    "",
+    `${mark(result.lolRuleInstalled)} LOL PROFILE`,
+    `${mark(result.globalRuleInstalled)} DESKTOP PROFILE`,
+    "",
+    `HOST  ${process.arch.toUpperCase()}`,
+    "R     RESCAN",
+  ].join("\n")
+}
+
+async function refreshDiagnostics() {
+  diagnosticText.content = "[>>] SCANNING HOST..."
+  if (diagnosticTimeline) {
+    diagnosticTimeline.pause()
+    engine.unregister(diagnosticTimeline)
+  }
+  diagnosticSweep.width = 3
+  diagnosticTimeline = createTimeline({ duration: 420, autoplay: false })
+  diagnosticTimeline.add(diagnosticSweep, {
+    width: sidebarWidth - 4,
+    duration: 420,
+    ease: "outExpo",
+  })
+  diagnosticTimeline.play()
+  renderDiagnostics(await diagnoseSystem())
+}
 
 function updateGauge(animate: boolean) {
   const selectedCount = choices.filter((item) => item.selected).length
@@ -120,7 +213,7 @@ function updateGauge(animate: boolean) {
     " 33% GAY MACOS  //  ALMOST NORMAL",
     "  0% GAY MACOS  //  NORMAL MODE UNLOCKED",
   ]
-  const targetWidth = [4, 21, 39, 58][selectedCount] ?? 4
+  const targetWidth = Math.max(3, Math.round((selectedCount / choices.length) * gaugeWidth))
   const meterColor = stockRemaining === 100
     ? "#ff4fa3"
     : stockRemaining > 50
@@ -167,6 +260,10 @@ function cleanup() {
     selectionTimeline.pause()
     engine.unregister(selectionTimeline)
   }
+  if (diagnosticTimeline) {
+    diagnosticTimeline.pause()
+    engine.unregister(diagnosticTimeline)
+  }
   entrance.pause()
   engine.unregister(entrance)
   engine.detach()
@@ -196,6 +293,7 @@ async function deploy() {
     })
     status.content = "ONLINE  Loadout installed. Open Karabiner Setup if prompted."
     status.fg = "#ffffff"
+    await refreshDiagnostics()
   } catch (error) {
     status.content = `FAILED  ${error instanceof Error ? error.message : String(error)}`
     status.fg = "#ffffff"
@@ -210,6 +308,10 @@ const onKeyPress = (key: KeyEvent) => {
   if (installing) return
   if (key.name === "q" || key.name === "escape") {
     renderer.destroy()
+    return
+  }
+  if (key.name === "r") {
+    void refreshDiagnostics()
     return
   }
   if (key.name === "up" || key.name === "k") cursor = (cursor + choices.length - 1) % choices.length
@@ -231,7 +333,8 @@ renderer.once("destroy", () => {
 })
 
 const entrance = createTimeline({ duration: 550, autoplay: false })
-entrance.add(shell, { left: 2, duration: 550, ease: "outExpo" })
+entrance.add(shell, { left: settledLeft, duration: 550, ease: "outExpo" })
 
 renderMenu(false)
 entrance.play()
+await refreshDiagnostics()
