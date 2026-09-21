@@ -1,6 +1,6 @@
 # macos-windows-lol-tui
 
-An animated [OpenTUI](https://opentui.com) installer that makes mouse and
+An animated monochrome [OpenTUI](https://opentui.com) installer that makes mouse and
 keyboard behavior on macOS feel closer to Windows, with a dedicated League of
 Legends mode.
 
@@ -53,8 +53,9 @@ Enter            install selected modules
 q or Escape      quit
 ```
 
-The interface includes a sliding entrance, a continuous accent animation, and
-an animated deployment indicator.
+The interface opens with `ARE YOU NORMAL OR A STOCK MACOS USER?` and includes
+a sliding entrance, an animated stock-macOS meter driven by the number of
+selected modules, and an animated deployment indicator.
 
 ## Safety
 

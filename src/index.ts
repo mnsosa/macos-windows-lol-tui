@@ -21,7 +21,7 @@ if (cliSelection) {
 
 const renderer = await createCliRenderer({
   exitOnCtrlC: true,
-  backgroundColor: "#070912",
+  backgroundColor: "#000000",
 })
 engine.attach(renderer)
 
@@ -54,6 +54,7 @@ const choices: Array<{
 let cursor = 0
 let installing = false
 let spinnerTimer: ReturnType<typeof setInterval> | undefined
+let selectionTimeline: ReturnType<typeof createTimeline> | undefined
 
 const shell = new BoxRenderable(renderer, {
   id: "shell",
@@ -61,69 +62,107 @@ const shell = new BoxRenderable(renderer, {
   left: -18,
   width: 76,
   height: 24,
-  borderStyle: "rounded",
-  borderColor: "#4055ff",
-  backgroundColor: "#0c1020",
+  borderStyle: "double",
+  borderColor: "#ffffff",
+  backgroundColor: "#050505",
   padding: 1,
   flexDirection: "column",
   gap: 1,
 })
 
-const eyebrow = new TextRenderable(renderer, {
-  content: "  RIFT SYSTEMS  //  macOS LOADOUT",
-  fg: "#ff3f70",
-})
 const title = new TextRenderable(renderer, {
-  content: "MACOS  x  WINDOWS  x  LOL",
-  fg: "#f4f7ff",
+  content: "ARE YOU NORMAL OR A STOCK MACOS USER?",
+  fg: "#ffffff",
 })
 const subtitle = new TextRenderable(renderer, {
-  content: "Choose the parts of the loadout you want to install.",
-  fg: "#8994b8",
+  content: "SELECT MORE. LEAVE STOCK MACOS BEHIND.",
+  fg: "#8c8c8c",
 })
-const accent = new BoxRenderable(renderer, {
-  width: 12,
+const gauge = new BoxRenderable(renderer, {
+  width: 58,
   height: 1,
-  backgroundColor: "#ff3f70",
+  backgroundColor: "#242424",
 })
-const menuText = new TextRenderable(renderer, { content: "", fg: "#dbe2ff" })
-const detail = new TextRenderable(renderer, { content: "", fg: "#7f8cb5" })
+const meter = new BoxRenderable(renderer, {
+  width: 4,
+  height: 1,
+  backgroundColor: "#ffffff",
+})
+gauge.add(meter)
+const gaugeLabel = new TextRenderable(renderer, { content: "", fg: "#bdbdbd" })
+const menuText = new TextRenderable(renderer, { content: "", fg: "#ffffff" })
+const detail = new TextRenderable(renderer, { content: "", fg: "#8c8c8c" })
 const status = new TextRenderable(renderer, {
-  content: "READY  Select modules, then deploy.",
-  fg: "#58e6b2",
+  content: "READY  Build your loadout, then deploy.",
+  fg: "#d8d8d8",
 })
 const footer = new TextRenderable(renderer, {
   content: "UP/DOWN navigate   SPACE toggle   ENTER install   Q quit",
-  fg: "#596481",
+  fg: "#666666",
 })
 
-shell.add(eyebrow)
 shell.add(title)
 shell.add(subtitle)
-shell.add(accent)
+shell.add(gauge)
+shell.add(gaugeLabel)
 shell.add(menuText)
 shell.add(detail)
 shell.add(status)
 shell.add(footer)
 renderer.root.add(shell)
 
-function renderMenu() {
+function updateGauge(animate: boolean) {
+  const selectedCount = choices.filter((item) => item.selected).length
+  const stockRemaining = Math.round(100 - (selectedCount / choices.length) * 100)
+  const labels = [
+    "100% STOCK MACOS  //  FACTORY CONDITION",
+    " 67% STOCK MACOS  //  FIRST SIGNS OF RECOVERY",
+    " 33% STOCK MACOS  //  ALMOST NORMAL",
+    "  0% STOCK MACOS  //  NORMAL MODE UNLOCKED",
+  ]
+  const targetWidth = [4, 21, 39, 58][selectedCount] ?? 4
+  gaugeLabel.content = labels[selectedCount] ?? labels[0]!
+
+  if (!animate) {
+    meter.width = targetWidth
+    return
+  }
+
+  if (selectionTimeline) {
+    selectionTimeline.pause()
+    engine.unregister(selectionTimeline)
+  }
+  selectionTimeline = createTimeline({ duration: 360, autoplay: false })
+  selectionTimeline.add(meter, {
+    width: targetWidth,
+    duration: 360,
+    ease: "outBack",
+  })
+  selectionTimeline.play()
+  status.content = `${stockRemaining}% STOCK MACOS REMAINING`
+  status.fg = "#d8d8d8"
+}
+
+function renderMenu(animateGauge?: boolean) {
   menuText.content = choices
     .map((item, index) => {
       const pointer = index === cursor ? ">" : " "
-      const check = item.selected ? "x" : " "
+      const check = item.selected ? "ON " : "OFF"
       return `${pointer} [${check}]  ${item.title}`
     })
     .join("\n\n")
   detail.content = `// ${choices[cursor]?.description ?? ""}`
+  if (animateGauge !== undefined) updateGauge(animateGauge)
 }
 
 function cleanup() {
   if (spinnerTimer) clearInterval(spinnerTimer)
+  if (selectionTimeline) {
+    selectionTimeline.pause()
+    engine.unregister(selectionTimeline)
+  }
   entrance.pause()
-  pulse.pause()
   engine.unregister(entrance)
-  engine.unregister(pulse)
   engine.detach()
 }
 
@@ -131,7 +170,7 @@ async function deploy() {
   const selected = choices.filter((item) => item.selected).map((item) => item.id)
   if (selected.length === 0) {
     status.content = "BLOCKED  Select at least one module."
-    status.fg = "#ffb454"
+    status.fg = "#ffffff"
     return
   }
 
@@ -150,10 +189,10 @@ async function deploy() {
       },
     })
     status.content = "ONLINE  Loadout installed. Open Karabiner Setup if prompted."
-    status.fg = "#58e6b2"
+    status.fg = "#ffffff"
   } catch (error) {
     status.content = `FAILED  ${error instanceof Error ? error.message : String(error)}`
-    status.fg = "#ff5d7d"
+    status.fg = "#ffffff"
   } finally {
     if (spinnerTimer) clearInterval(spinnerTimer)
     spinnerTimer = undefined
@@ -169,7 +208,11 @@ const onKeyPress = (key: KeyEvent) => {
   }
   if (key.name === "up" || key.name === "k") cursor = (cursor + choices.length - 1) % choices.length
   else if (key.name === "down" || key.name === "j") cursor = (cursor + 1) % choices.length
-  else if (key.name === "space") choices[cursor]!.selected = !choices[cursor]!.selected
+  else if (key.name === "space") {
+    choices[cursor]!.selected = !choices[cursor]!.selected
+    renderMenu(true)
+    return
+  }
   else if (key.name === "return") void deploy()
   else return
   renderMenu()
@@ -182,17 +225,7 @@ renderer.once("destroy", () => {
 })
 
 const entrance = createTimeline({ duration: 550, autoplay: false })
-entrance.add(shell, { left: 2, duration: 550, ease: "outBack" })
+entrance.add(shell, { left: 2, duration: 550, ease: "outExpo" })
 
-const pulse = createTimeline({ duration: 1800, loop: true, autoplay: false })
-pulse.add(accent, {
-  width: 56,
-  duration: 900,
-  ease: "inOutSine",
-  alternate: true,
-  loop: true,
-})
-
-renderMenu()
+renderMenu(false)
 entrance.play()
-pulse.play()
