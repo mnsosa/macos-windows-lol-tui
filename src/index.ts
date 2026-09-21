@@ -122,10 +122,10 @@ function updateGauge(animate: boolean) {
   ]
   const targetWidth = [4, 21, 39, 58][selectedCount] ?? 4
   const meterColor = stockRemaining === 100
-    ? "#2684ff"
+    ? "#ff4fa3"
     : stockRemaining > 50
       ? "#9457eb"
-      : "#ff4fa3"
+      : "#2684ff"
   gaugeLabel.content = labels[selectedCount] ?? labels[0]!
   meter.backgroundColor = meterColor
 
